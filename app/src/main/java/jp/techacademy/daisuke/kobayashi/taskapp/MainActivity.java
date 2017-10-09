@@ -6,17 +6,21 @@ import android.app.PendingIntent;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.os.Bundle;
+import android.support.annotation.IdRes;
 import android.support.design.widget.FloatingActionButton;
-import android.support.design.widget.Snackbar;
 import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
+import android.text.InputType;
 import android.view.View;
 import android.widget.AdapterView;
+import android.widget.EditText;
 import android.widget.ListView;
+import android.widget.Button;
 import java.util.Date;
 
 import io.realm.Realm;
 import io.realm.RealmChangeListener;
+import io.realm.RealmQuery;
 import io.realm.RealmResults;
 import io.realm.Sort;
 
@@ -25,6 +29,10 @@ public class MainActivity extends AppCompatActivity {
     public final static String EXTRA_TASK = "jp.techacademy.daisuke.kobayashi.taskapp.TASK";
 
     private Realm mRealm;
+    private Button mSearchButton;
+    private ListView mListView;
+    private TaskAdapter mTaskAdapter;
+    private EditText searchText;
 
     //mRealmListenerはRealmのデータベースに追加や削除など変化があった場合に呼ばれるリスナー
     private RealmChangeListener mRealmListener = new RealmChangeListener() {
@@ -34,13 +42,13 @@ public class MainActivity extends AppCompatActivity {
         }
     };
 
-    private ListView mListView;
-    private TaskAdapter mTaskAdapter;
-
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
+
+        mSearchButton = (Button)findViewById(R.id.search_button);
+        mSearchButton.setOnClickListener(mSearchClickListener);
 
         FloatingActionButton fab = (FloatingActionButton) findViewById(R.id.fab);
 
@@ -84,7 +92,6 @@ public class MainActivity extends AppCompatActivity {
             public boolean onItemLongClick(AdapterView<?> parent, View view, int position, long id) {
 
                 // タスクを削除する
-
                 final Task task = (Task) parent.getAdapter().getItem(position);
 
                 // ダイアログを表示する
@@ -134,8 +141,10 @@ public class MainActivity extends AppCompatActivity {
 
     private void reloadListView() {
 
+        RealmResults<Task> taskRealmResults;
+
         // Realmデータベースから、「全てのデータを取得して新しい日時順に並べた結果」を取得
-        RealmResults<Task> taskRealmResults = mRealm.where(Task.class).findAllSorted("date", Sort.DESCENDING);
+        taskRealmResults = mRealm.where(Task.class).findAllSorted("date", Sort.DESCENDING);
         // 上記の結果を、TaskList としてセットする
         mTaskAdapter.setTaskList(mRealm.copyFromRealm(taskRealmResults));
         // TaskのListView用のアダプタに渡す
@@ -156,6 +165,39 @@ public class MainActivity extends AppCompatActivity {
         */
     }
 
+    private void searchListView() {
+        searchText = (EditText)findViewById(R.id.search_text);
+        RealmResults<Task> taskRealmResults;
+
+        String searchTextstr = searchText.getText().toString();
+
+        if(searchTextstr.matches("")){
+            taskRealmResults = mRealm.where(Task.class).findAllSorted("date", Sort.DESCENDING);
+        }else {
+            //Realmデータベースから、「検索結果と一致したもの」を取得
+            RealmQuery<Task> query = mRealm.where(Task.class);
+            query.equalTo("category", searchTextstr);
+            taskRealmResults = query.findAll();
+        }
+
+        // 上記の結果を、TaskList としてセットする
+        mTaskAdapter.setTaskList(mRealm.copyFromRealm(taskRealmResults));
+        // TaskのListView用のアダプタに渡す
+        mListView.setAdapter(mTaskAdapter);
+        // 表示を更新するために、アダプターにデータが変更されたことを知らせる
+        mTaskAdapter.notifyDataSetChanged();
+
+    }
+
+    //Searchボタン
+    private View.OnClickListener mSearchClickListener = new View.OnClickListener() {
+        @Override
+        public void onClick(View v) {
+            searchListView();
+        }
+    };
+
+
     //onDestroyはActibityが破棄されるときに発動
     //Realmは破棄する必要があるため、実行させる
     @Override
@@ -169,12 +211,11 @@ public class MainActivity extends AppCompatActivity {
         Task task = new Task();
         task.setTitle("作業");
         task.setContents("プログラムを書いてPUSHする");
+        task.setCategory("仕事");
         task.setDate(new Date());
         task.setId(0);
         mRealm.beginTransaction();
         mRealm.copyToRealmOrUpdate(task);
         mRealm.commitTransaction();
     }
-
-
 }
