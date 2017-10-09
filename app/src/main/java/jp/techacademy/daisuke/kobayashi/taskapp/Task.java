@@ -13,6 +13,7 @@ public class Task extends RealmObject implements Serializable {
     private String title; // タイトル
     private String contents; // 内容
     private Date date; // 日時
+    //private String test;
 
     // id をプライマリーキーとして設定
     @PrimaryKey
