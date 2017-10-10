@@ -19,7 +19,6 @@ import java.util.Locale;
 public class TaskAdapter extends BaseAdapter{
     private LayoutInflater mLayoutInflater;
     private List<Task> mTaskList;
-    //private List<String> mTaskList;
 
     public TaskAdapter(Context context) {
 

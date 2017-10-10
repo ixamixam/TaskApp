@@ -9,11 +9,11 @@ import io.realm.annotations.PrimaryKey;
 //シリアライズ　データを丸ごと受け渡し
 //クラスを定義
 
-public class Task extends RealmObject implements Serializable {
+public class Task extends RealmObject implements Serializable{
     private String title; // タイトル
     private String contents; // 内容
+    private String category;   //分類
     private Date date; // 日時
-    //private String test;
 
     // id をプライマリーキーとして設定
     @PrimaryKey
@@ -34,6 +34,15 @@ public class Task extends RealmObject implements Serializable {
     public void setContents(String contents) {
         this.contents = contents;
     }
+
+    public String getCategory() {
+        return category;
+    }
+
+    public void setCategory(String category) {
+        this.category = category;
+    }
+
 
     public Date getDate() {
         return date;
